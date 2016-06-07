@@ -52,11 +52,11 @@ var DuckieTV = angular.module('DuckieTV', [
         windowLocationReload: function() {
             if ((navigator.userAgent.toLowerCase().indexOf('standalone') !== -1)) {
                 // reload for standalones
-                console.debug('DuckietvReload for standalone');
+                //console.debug('DuckietvReload for standalone');
                 $rootScope.$emit('locationreload');
             } else {
                 // reload for non-standalone
-                console.debug('DuckietvReload for non-standalone');
+                //console.debug('DuckietvReload for non-standalone');
                 window.location.reload();
             }
         }
@@ -157,12 +157,7 @@ var DuckieTV = angular.module('DuckieTV', [
     var today = new Date();
     var tommorow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
     var timeToMidnight = (tommorow - today) + 1000; // a second after midnight
-    if (localStorage.getItem('optin_error_reporting')) {
-        timeToMidnight = 1000 * 30; // 30 seconds after midnight
-        console.debug('test mode enabled, reset due in %s ms',timeToMidnight);
-    };
     var timer = setTimeout(function() {
-        console.debug('its a second after midnight, time to reload');
         $injector.get('DuckietvReload').windowLocationReload();
     }, timeToMidnight);
 }])
