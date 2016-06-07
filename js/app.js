@@ -47,13 +47,13 @@ var DuckieTV = angular.module('DuckieTV', [
  * which ensures that standalone gets some pre-processing done before actioning
  * the window.location.reload()  fixes #569
  */
-.service('DuckietvReload', function() {
+.service('DuckietvReload', ["$rootScope", function($rootScope) {
     var service = {
         windowLocationReload: function() {
             if ((navigator.userAgent.toLowerCase().indexOf('standalone') !== -1)) {
                 // reload for standalones
                 console.debug('DuckietvReload for standalone');
-                require('nw.gui').Window.get().emit('locationreload');
+                $rootScope.$emit('locationreload');
             } else {
                 // reload for non-standalone
                 console.debug('DuckietvReload for non-standalone');
@@ -62,7 +62,7 @@ var DuckieTV = angular.module('DuckieTV', [
         }
     };
     return service;
-})
+}])
 
 /**
  * BackupService is injected whenever a backup is requested
@@ -112,7 +112,7 @@ var DuckieTV = angular.module('DuckieTV', [
                     if (localStorage.key(i).indexOf('trakttv.trending.cache') > -1) continue;
                     if (localStorage.key(i).indexOf('trakttv.lastupdated.trending') > -1) continue;
                     out.settings[localStorage.key(i)] = localStorage.getItem(localStorage.key(i));
-                }
+                };
                 // Store all the series
                 while (serie = series.next()) {
                     out.series[serie.get('TVDB_ID')] = [];
@@ -128,7 +128,7 @@ var DuckieTV = angular.module('DuckieTV', [
                         'customSearchSizeMin': serie.get('customSearchSizeMin'),
                         'customSearchSizeMax': serie.get('customSearchSizeMax')
                     })
-                }
+                };
 
                 // Store watched episodes for each serie
                 return CRUD.executeQuery('select Series.TVDB_ID, Episodes.TVDB_ID as epTVDB_ID, Episodes.watchedAt, Episodes.downloaded from Series left join Episodes on Episodes.ID_Serie = Series.ID_Serie where Episodes.downloaded == 1 or  Episodes.watchedAt is not null').then(function(res) {
@@ -138,7 +138,7 @@ var DuckieTV = angular.module('DuckieTV', [
                             'watchedAt': new Date(row.get('watchedAt')).getTime(),
                             'downloaded': 1
                         })
-                    }
+                    };
                     var blob = new Blob([angular.toJson(out, true)], {
                         type: 'text/json'
                     });
@@ -157,7 +157,6 @@ var DuckieTV = angular.module('DuckieTV', [
     var today = new Date();
     var tommorow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
     var timeToMidnight = (tommorow - today) + 1000; // a second after midnight
-    console.debug('time to midnight is %s ms',timeToMidnight);
     if (localStorage.getItem('optin_error_reporting')) {
         timeToMidnight = 1000 * 30; // 30 seconds after midnight
         console.debug('test mode enabled, reset due in %s ms',timeToMidnight);
@@ -166,7 +165,6 @@ var DuckieTV = angular.module('DuckieTV', [
         console.debug('its a second after midnight, time to reload');
         $injector.get('DuckietvReload').windowLocationReload();
     }, timeToMidnight);
-    console.debug('timer =',timer);
 }])
 
 .run(["$rootScope", "$state", function($rootScope, $state) {
@@ -174,7 +172,7 @@ var DuckieTV = angular.module('DuckieTV', [
         function(e, toState, toParams, fromState, fromParams) {
             if (!toState.views) {
                 return;
-            }
+            };
             Object.keys(toState.views).map(function(viewname) {
                 var view = document.querySelector("[ui-view=" + viewname.split('@')[0] + "]");
                 if (view) view.classList.add('ui-loading');
@@ -185,7 +183,7 @@ var DuckieTV = angular.module('DuckieTV', [
         function(e, toState, toParams, fromState, fromParams) {
             if (!toState.views) {
                 return;
-            }
+            };
             Object.keys(toState.views).map(function(viewname) {
                 var view = document.querySelector("[ui-view=" + viewname.split('@')[0] + "]");
                 if (view) view.classList.remove('ui-loading');
@@ -202,9 +200,7 @@ var DuckieTV = angular.module('DuckieTV', [
          * creates timer to schedule an autoBackup
          */
         var scheduleAutoBackup = function() {
-            console.debug('sheduleautobackup',timeToNextBackup);
             setTimeout(function() {
-                console.debug('sheduleautobackup settimeout',timeToNextBackup);
                 // wait for FavoritesService to be available
                 if (FavoritesService.initialized == true) {
                     // only do the backup if there are shows in favorites.
@@ -256,10 +252,9 @@ var DuckieTV = angular.module('DuckieTV', [
                 break;
             default:
                 console.error('unexpected autoBackupPeriod', autoBackupPeriod);
-        }
+        };
         // schedule the timer for the next backup
         var timeToNextBackup = (nextBackupDT - localDT);
-        console.debug('time to next backup is %s ms',timeToNextBackup);
         if (timeToNextBackup > 0) {
             console.info('The next autoBackup is scheduled for', new Date(parseInt(nextBackupDT)));
         } else {
